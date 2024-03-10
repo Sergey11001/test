@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  broadcast:
+    build: broadcast
+    ports:
+      - 12345:12345
+    networks:
+      - mynetwork
+  service1:
+    build: service
+    ports:
+      - 50051:50051
+    environment:
+      - CONFIG_PATH=config/service1.yaml
+    networks:
+      - mynetwork
+    depends_on:
+      - broadcast
+  service2:
+    build: service
+    ports:
+      - 50052:50052
+    environment:
+      - CONFIG_PATH=config/service2.yaml
+    networks:
+      - mynetwork
+    depends_on:
+      - broadcast
+  service3:
+    build: service
+    ports:
+      - 50053:50053
+    environment:
+      - CONFIG_PATH=config/service3.yaml
+    networks:
+      - mynetwork
+    depends_on:
+      - broadcast
+
+networks:
+  mynetwork:
+    driver: bridge

@@ -1,0 +1,6 @@
+env: "local"
+dialTimeout: 4s
+broadcastPort: "12345"
+grpc:
+  port: "50052"
+  timeout: 1h
