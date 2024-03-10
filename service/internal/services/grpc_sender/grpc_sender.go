@@ -16,19 +16,17 @@ import (
 )
 
 type GRPCSender struct {
-	log          *slog.Logger
-	RemovePeerCh chan string
+	log *slog.Logger
 }
 
-func NewGRPCSender(log *slog.Logger, removePeerCh chan string) *GRPCSender {
+func NewGRPCSender(log *slog.Logger) *GRPCSender {
 	return &GRPCSender{
-		log:          log,
-		RemovePeerCh: removePeerCh,
+		log: log,
 	}
 }
 
-func (g *GRPCSender) BindStream(ctx context.Context, currentAddr, addr string) error {
-	client, err := NewGRPCClient(addr)
+func (g *GRPCSender) StartDispatch(ctx context.Context, currentAddr, addr string, rmNodeCh chan string) error {
+	client, err := newGRPCClient(addr)
 	if err != nil {
 		g.log.Error(fmt.Sprintf("failed to create grpc client: %v", err))
 		return err
@@ -43,21 +41,14 @@ func (g *GRPCSender) BindStream(ctx context.Context, currentAddr, addr string) e
 
 	go func() {
 		for {
-			select {
-			case <-ctx.Done():
-				fmt.Println("done")
+			_, recvErr := stream.Recv()
+			if recvErr != nil {
+				if errors.Is(recvErr, io.EOF) || status.Code(err) == codes.Canceled {
+					g.log.Error(fmt.Sprintf("eof: %v", recvErr.Error()))
+				}
+				g.log.Error(fmt.Sprintf("error while receiving stream response: %v", recvErr.Error()))
 				waitch <- struct{}{}
 				return
-			default:
-				_, recvErr := stream.Recv()
-				if recvErr != nil {
-					if errors.Is(recvErr, io.EOF) || status.Code(err) == codes.Canceled {
-						g.log.Error(fmt.Sprintf("eof: %v", recvErr.Error()))
-					}
-					g.log.Error(fmt.Sprintf("error while receiving stream response: %v", recvErr.Error()))
-					waitch <- struct{}{}
-					return
-				}
 			}
 		}
 	}()
@@ -83,13 +74,13 @@ func (g *GRPCSender) BindStream(ctx context.Context, currentAddr, addr string) e
 		case <-waitch:
 			stream.CloseSend()
 			g.log.Info(fmt.Sprintf("stream closed: %s", addr))
-			g.RemovePeerCh <- addr
+			rmNodeCh <- addr
 			return nil
 		}
 	}
 }
 
-func NewGRPCClient(addr string) (*chatv1.ChatClient, error) {
+func newGRPCClient(addr string) (*chatv1.ChatClient, error) {
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("%s:%w", "failed to dial", err)

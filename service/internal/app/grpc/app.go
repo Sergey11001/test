@@ -41,6 +41,5 @@ func (a *App) Start() error {
 }
 
 func (a *App) Stop() {
-	a.log.Info("shutting down gRPC server")
 	a.gRPCServer.Stop()
 }

@@ -37,6 +37,26 @@ services:
       - mynetwork
     depends_on:
       - broadcast
+  service4:
+    build: service
+    ports:
+      - 50054:50054
+    environment:
+      - CONFIG_PATH=config/service4.yaml
+    networks:
+      - mynetwork
+    depends_on:
+      - broadcast
+  service5:
+    build: service
+    ports:
+      - 50055:50055
+    environment:
+      - CONFIG_PATH=config/service5.yaml
+    networks:
+      - mynetwork
+    depends_on:
+      - broadcast
 
 networks:
   mynetwork:

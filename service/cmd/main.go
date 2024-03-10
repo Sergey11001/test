@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
 	"service1/internal/app"
 	"service1/internal/config"
+	"service1/internal/services/discovery"
+	"service1/internal/services/grpc_sender"
 	"syscall"
 )
 
@@ -16,10 +19,17 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	application := app.New(log, cfg.GRPCConfig.Port)
+	disc := discovery.NewDiscovery(log, cfg.GRPCConfig.Port, cfg.BroadcastPort)
+	sender := grpc_sender.NewGRPCSender(log)
 
-	go application.MustRun()
-	go application.Start(ctx, cfg.BroadcastPort, cfg.GRPCConfig.Port)
+	application := app.New(log, cfg.GRPCConfig.Port, disc, sender)
+
+	go func() {
+		if err := application.Start(ctx); err != nil {
+			log.Error(fmt.Sprintf("failed to start application: %v", err))
+			return
+		}
+	}()
 
 	stopChan := make(chan os.Signal)
 	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
