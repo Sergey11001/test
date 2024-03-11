@@ -31,7 +31,8 @@ func (g *GRPCSender) StartDispatch(ctx context.Context, currentAddr, addr string
 		g.log.Error(fmt.Sprintf("failed to create grpc client: %v", err))
 		return err
 	}
-	stream, err := (*client).SendAndGetMessage(ctx)
+
+	stream, err := client.SendAndGetMessage(ctx)
 	if err != nil {
 		g.log.Error(fmt.Sprintf("failed to create grpc stream: %v", err))
 		return err
@@ -80,7 +81,7 @@ func (g *GRPCSender) StartDispatch(ctx context.Context, currentAddr, addr string
 	}
 }
 
-func newGRPCClient(addr string) (*chatv1.ChatClient, error) {
+func newGRPCClient(addr string) (chatv1.ChatClient, error) {
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("%s:%w", "failed to dial", err)
@@ -88,5 +89,5 @@ func newGRPCClient(addr string) (*chatv1.ChatClient, error) {
 
 	client := chatv1.NewChatClient(conn)
 
-	return &client, nil
+	return client, nil
 }

@@ -10,25 +10,26 @@ import (
 )
 
 const (
-	PrefixIP      = "qwe"
 	BroadcastHost = "255.255.255.255"
 )
 
 type Discovery struct {
-	log           *slog.Logger
-	mu            *sync.Mutex
-	peers         map[string]struct{}
-	localPort     string
-	broadcastPort string
+	log             *slog.Logger
+	mu              *sync.Mutex
+	peers           map[string]struct{}
+	localPort       string
+	broadcastPort   string
+	broadcastPrefix string
 }
 
-func NewDiscovery(log *slog.Logger, localPort, broadcastPort string) *Discovery {
+func NewDiscovery(log *slog.Logger, localPort, broadcastPort, broadcastPrefix string) *Discovery {
 	return &Discovery{
-		log:           log,
-		mu:            &sync.Mutex{},
-		peers:         make(map[string]struct{}),
-		localPort:     localPort,
-		broadcastPort: broadcastPort,
+		log:             log,
+		mu:              &sync.Mutex{},
+		peers:           make(map[string]struct{}),
+		localPort:       localPort,
+		broadcastPort:   broadcastPort,
+		broadcastPrefix: broadcastPrefix,
 	}
 }
 
@@ -63,7 +64,7 @@ func (d *Discovery) Broadcast(ctx context.Context, currentAddr string, addNodeCh
 	}()
 
 	for {
-		body := PrefixIP + currentAddr
+		body := d.broadcastPrefix + currentAddr
 		_, err = pc.WriteTo([]byte(body), addr)
 		if err != nil {
 			panic(err)

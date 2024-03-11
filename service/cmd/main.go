@@ -19,22 +19,29 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	disc := discovery.NewDiscovery(log, cfg.GRPCConfig.Port, cfg.BroadcastPort)
+	disc := discovery.NewDiscovery(log, cfg.GRPCConfig.Port, cfg.BroadcastPort, cfg.BroadcastPrefix)
 	sender := grpc_sender.NewGRPCSender(log)
 
 	application := app.New(log, cfg.GRPCConfig.Port, disc, sender)
 
+	stopCh := make(chan os.Signal)
+	errorCh := make(chan error)
+	signal.Notify(stopCh, syscall.SIGINT, syscall.SIGTERM)
+
 	go func() {
 		if err := application.Start(ctx); err != nil {
-			log.Error(fmt.Sprintf("failed to start application: %v", err))
-			return
+			errorCh <- err
 		}
 	}()
 
-	stopChan := make(chan os.Signal)
-	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
-	<-stopChan
-
-	cancel()
-	application.GRPCSrv.Stop()
+	select {
+	case <-stopCh:
+		log.Info("shutting down...")
+		cancel()
+		application.GRPCSrv.Stop()
+		return
+	case err := <-errorCh:
+		log.Error(fmt.Sprintf("application error: %v", err))
+		return
+	}
 }

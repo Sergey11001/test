@@ -4,20 +4,12 @@ import (
 	"flag"
 	"github.com/ilyakaznacheev/cleanenv"
 	"os"
-	"time"
 )
 
 type Config struct {
-	Env             string        `yaml:"env" env:"ENV" env-default:"local"`
-	DealTimeout     time.Duration `yaml:"dealTimeout" env:"DEAL_TIMEOUT" env-default:"4s"`
-	BroadcastPort   string        `yaml:"broadcastPort" env:"BROADCAST_PORT" env-required:"true"`
-	BroadcastPrefix string        `yaml:"broadcastPrefix" env:"BROADCAST_PREFIX"`
-	GRPCConfig      GRPCConfig    `yaml:"grpc" env:"GRPC" env-required:"true"`
-}
-
-type GRPCConfig struct {
-	Port    string        `yaml:"port" env:"GRPC_PORT" env-required:"true"`
-	Timeout time.Duration `yaml:"timeout" env:"GRPC_TIMEOUT" env-default:"30s"`
+	BroadcastIP   string `yaml:"broadcastIP" env:"BROADCAST_IP" env-required:"true"`
+	BroadcastPort int    `yaml:"broadcastPort" env:"BROADCAST_PORT" env-required:"true"`
+	PrefixIP      string `yaml:"prefixIP" env:"PREFIX_IP"`
 }
 
 func MustLoad() *Config {

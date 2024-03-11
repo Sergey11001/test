@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"math/rand"
 	"net"
 	"strings"
@@ -17,13 +16,19 @@ func GenerateString(length int) string {
 	return b.String()
 }
 
-func GetLocalHost() string {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
+func GetLocalIP() (string, error) {
+	var localIP string
+	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		log.Fatal("Error getting local IP:", err)
+		return localIP, err
 	}
-	defer conn.Close()
 
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	return localAddr.IP.String()
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				localIP = ipnet.IP.String()
+			}
+		}
+	}
+	return localIP, nil
 }

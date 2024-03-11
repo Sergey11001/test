@@ -1,0 +1,3 @@
+broadcastIP: "255.255.255.255"
+broadcastPort: 12345
+prefixIP: "aaa"

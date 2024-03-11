@@ -28,14 +28,17 @@ type App struct {
 
 func New(log *slog.Logger, port string, discoveryService Discovery, grpcSender Sender) *App {
 	grpcApp := grpcapp.New(log, port)
-	currentAddr := net.JoinHostPort(utils.GetLocalHost(), port)
+	currentIP, err := utils.GetLocalIP()
+	if err != nil {
+		log.Error(fmt.Sprintf("failed to get local ip: %v", err))
+	}
 
 	return &App{
 		log:       log,
 		GRPCSrv:   grpcApp,
 		Discovery: discoveryService,
 		Sender:    grpcSender,
-		addr:      currentAddr,
+		addr:      net.JoinHostPort(currentIP, port),
 	}
 }
 
