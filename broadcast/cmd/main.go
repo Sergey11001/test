@@ -1,14 +1,14 @@
 package main
 
 import (
+	"broadcast/internal/app"
+	"broadcast/internal/config"
 	"context"
 	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
-	"test_project/broadcast/internal/app"
-	"test_project/broadcast/internal/config"
 )
 
 func main() {

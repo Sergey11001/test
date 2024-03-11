@@ -1,51 +1,36 @@
 package config
 
 import (
-	"flag"
-	"github.com/ilyakaznacheev/cleanenv"
+	"fmt"
+	"github.com/kelseyhightower/envconfig"
 	"os"
 	"time"
 )
 
 type Config struct {
-	Env             string        `yaml:"env" env:"ENV" env-default:"local"`
-	DealTimeout     time.Duration `yaml:"dealTimeout" env:"DEAL_TIMEOUT" env-default:"4s"`
-	BroadcastPort   string        `yaml:"broadcastPort" env:"BROADCAST_PORT" env-required:"true"`
-	BroadcastPrefix string        `yaml:"broadcastPrefix" env:"BROADCAST_PREFIX"`
-	GRPCConfig      GRPCConfig    `yaml:"grpc" env:"GRPC" env-required:"true"`
+	Env             string        `envconfig:"ENV"`
+	DealTimeout     time.Duration `envconfig:"DEAL_TIMEOUT" default:"4s"`
+	BroadcastPort   string        `envconfig:"BROADCAST_PORT" required:"true"`
+	BroadcastPrefix string        `envconfig:"BROADCAST_PREFIX"`
+	GRPCConfig      GRPCConfig
+	ConfigPrefix    string `envconfig:"CONFIG_PREFIX"`
 }
 
 type GRPCConfig struct {
-	Port    string        `yaml:"port" env:"GRPC_PORT" env-required:"true"`
-	Timeout time.Duration `yaml:"timeout" env:"GRPC_TIMEOUT" env-default:"30s"`
+	Port    string
+	Timeout time.Duration `envconfig:"GRPC_TIMEOUT" default:"30s"`
 }
 
 func MustLoad() *Config {
-	path := parseConfigPath()
-	if path == "" {
-		panic("config path is empty")
-	}
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		panic("config file not found: " + path)
-	}
-
 	config := &Config{}
-	if err := cleanenv.ReadConfig(path, config); err != nil {
-		panic("can't read config: " + err.Error())
+
+	envconfig.MustProcess("", config)
+
+	GRPCPort := os.Getenv(fmt.Sprintf(config.ConfigPrefix + "_GRPC_PORT"))
+	if GRPCPort == "" {
+		GRPCPort = "50055"
 	}
+	config.GRPCConfig.Port = GRPCPort
 
 	return config
-}
-
-func parseConfigPath() string {
-	var res string
-
-	flag.StringVar(&res, "config", "", "config file path")
-	flag.Parse()
-
-	if res == "" {
-		res = os.Getenv("CONFIG_PATH")
-	}
-	return res
 }

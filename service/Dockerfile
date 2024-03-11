@@ -8,6 +8,11 @@ RUN go mod download
 
 RUN go build -o service ./cmd/main.go
 
-ENV CONFIG_PATH="./config/service1.yaml"
+ENV ENV=local
+ENV DIAL_TIMEOUT=4s
+ENV BROADCAST_PORT=12345
+ENV BROADCAST_PREFIX=aaa
+ENV GRPC_TIMEOUT=1h
+ENV CONFIG_PREFIX=S1
 
 CMD ["./service"]

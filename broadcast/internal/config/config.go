@@ -1,43 +1,18 @@
 package config
 
 import (
-	"flag"
-	"github.com/ilyakaznacheev/cleanenv"
-	"os"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
-	BroadcastIP   string `yaml:"broadcastIP" env:"BROADCAST_IP" env-required:"true"`
-	BroadcastPort int    `yaml:"broadcastPort" env:"BROADCAST_PORT" env-required:"true"`
-	PrefixIP      string `yaml:"prefixIP" env:"PREFIX_IP"`
+	BroadcastIP   string `envconfig:"BROADCAST_IP" required:"true"`
+	BroadcastPort int    `envconfig:"BROADCAST_PORT" required:"true"`
+	PrefixIP      string `envconfig:"BROADCAST_PREFIX"`
 }
 
 func MustLoad() *Config {
-	path := parseConfigPath()
-	if path == "" {
-		panic("config path is empty")
-	}
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		panic("config file not found: " + path)
-	}
-
 	config := &Config{}
-	if err := cleanenv.ReadConfig(path, config); err != nil {
-		panic("can't read config: " + err.Error())
-	}
+	envconfig.MustProcess("", config)
 
 	return config
-}
-
-func parseConfigPath() string {
-	var res string
-
-	flag.StringVar(&res, "config", "", "config file path")
-	flag.Parse()
-
-	if res == "" {
-		res = os.Getenv("CONFIG_PATH")
-	}
-	return res
 }

@@ -5,14 +5,16 @@ services:
     build: broadcast
     ports:
       - 12345:12345
+    env_file: .env
     networks:
       - mynetwork
   service1:
     build: service
     ports:
       - 50051:50051
+    env_file: .env
     environment:
-      - CONFIG_PATH=config/service1.yaml
+      - CONFIG_PREFIX=S1
     networks:
       - mynetwork
     depends_on:
@@ -21,8 +23,9 @@ services:
     build: service
     ports:
       - 50052:50052
+    env_file: .env
     environment:
-      - CONFIG_PATH=config/service2.yaml
+      - CONFIG_PREFIX=S2
     networks:
       - mynetwork
     depends_on:
@@ -31,8 +34,9 @@ services:
     build: service
     ports:
       - 50053:50053
+    env_file: .env
     environment:
-      - CONFIG_PATH=config/service3.yaml
+      - CONFIG_PREFIX=S3
     networks:
       - mynetwork
     depends_on:
@@ -41,8 +45,9 @@ services:
     build: service
     ports:
       - 50054:50054
+    env_file: .env
     environment:
-      - CONFIG_PATH=config/service4.yaml
+      - CONFIG_PREFIX=S4
     networks:
       - mynetwork
     depends_on:
@@ -51,8 +56,9 @@ services:
     build: service
     ports:
       - 50055:50055
+    env_file: .env
     environment:
-      - CONFIG_PATH=config/service5.yaml
+      - CONFIG_PREFIX=S5
     networks:
       - mynetwork
     depends_on:
