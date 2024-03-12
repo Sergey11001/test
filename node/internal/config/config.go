@@ -8,7 +8,6 @@ import (
 )
 
 type Config struct {
-	Env             string        `envconfig:"ENV"`
 	DealTimeout     time.Duration `envconfig:"DEAL_TIMEOUT" default:"4s"`
 	BroadcastPort   string        `envconfig:"BROADCAST_PORT" required:"true"`
 	BroadcastPrefix string        `envconfig:"BROADCAST_PREFIX"`
@@ -28,7 +27,7 @@ func MustLoad() *Config {
 
 	GRPCPort := os.Getenv(fmt.Sprintf(config.ConfigPrefix + "_GRPC_PORT"))
 	if GRPCPort == "" {
-		GRPCPort = "50055"
+		GRPCPort = "50051"
 	}
 	config.GRPCConfig.Port = GRPCPort
 

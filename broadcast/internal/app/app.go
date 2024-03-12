@@ -51,20 +51,31 @@ func (a *App) Start(ctx context.Context, broadcastPort int, broadcastIP, prefixI
 
 		if _, ok := remoteCons.Load(remoteAddr.String()); !ok {
 			remoteCons.Store(remoteAddr.String(), &remoteAddr)
+
+			go func() {
+				remoteCons.Range(func(key, value interface{}) bool {
+					keyAddr, ok := key.(string)
+					if !ok {
+						return true
+					}
+
+					if keyAddr == remoteAddr.String() {
+						return true
+					}
+
+					if _, err := conn.WriteTo(body, *value.(*net.Addr)); err != nil {
+						remoteCons.Delete(key)
+						return true
+					}
+
+					if _, err := conn.WriteTo([]byte(keyAddr), remoteAddr); err != nil {
+						return true
+					}
+
+					return true
+				})
+			}()
 		}
 
-		go func() {
-			remoteCons.Range(func(key, value interface{}) bool {
-				if key == remoteAddr.String() {
-					return true
-				}
-
-				if _, err := conn.WriteTo(body, *value.(*net.Addr)); err != nil {
-					remoteCons.Delete(key)
-					return true
-				}
-				return true
-			})
-		}()
 	}
 }

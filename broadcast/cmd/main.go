@@ -16,7 +16,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	log.Info("starting broadcast service")
+	log.Info("starting broadcast node")
 
 	application := app.New(log)
 

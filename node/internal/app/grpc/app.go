@@ -33,7 +33,7 @@ func (a *App) Start() error {
 
 	a.log.Info(fmt.Sprintf("gRPC server listening on port %s", a.port))
 
-	if err := a.gRPCServer.Serve(lis); err != nil {
+	if err = a.gRPCServer.Serve(lis); err != nil {
 		return fmt.Errorf("%s:%w", "failed to serve", err)
 	}
 

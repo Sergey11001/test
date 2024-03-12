@@ -11,6 +11,7 @@ import (
 
 const (
 	BroadcastHost = "255.255.255.255"
+	Timeout       = 3 * time.Second
 )
 
 type Discovery struct {
@@ -25,11 +26,11 @@ type Discovery struct {
 func NewDiscovery(log *slog.Logger, localPort, broadcastPort, broadcastPrefix string) *Discovery {
 	return &Discovery{
 		log:             log,
-		mu:              &sync.Mutex{},
 		peers:           make(map[string]struct{}),
 		localPort:       localPort,
 		broadcastPort:   broadcastPort,
 		broadcastPrefix: broadcastPrefix,
+		mu:              &sync.Mutex{},
 	}
 }
 
@@ -69,7 +70,7 @@ func (d *Discovery) Broadcast(ctx context.Context, currentAddr string, addNodeCh
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(Timeout)
 	}
 }
 

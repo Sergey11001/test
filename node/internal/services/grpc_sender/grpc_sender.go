@@ -38,17 +38,18 @@ func (g *GRPCSender) StartDispatch(ctx context.Context, currentAddr, addr string
 		return err
 	}
 
-	waitch := make(chan struct{})
+	closeStream := make(chan struct{})
 
 	go func() {
 		for {
-			_, recvErr := stream.Recv()
-			if recvErr != nil {
-				if errors.Is(recvErr, io.EOF) || status.Code(err) == codes.Canceled {
-					g.log.Error(fmt.Sprintf("eof: %v", recvErr.Error()))
+			_, err := stream.Recv()
+			if err != nil {
+				if errors.Is(err, io.EOF) || status.Code(err) == codes.Canceled {
+					g.log.Error(fmt.Sprintf("eof: %v", err.Error()))
+				} else {
+					g.log.Error(fmt.Sprintf("error while receiving stream response: %v", err.Error()))
 				}
-				g.log.Error(fmt.Sprintf("error while receiving stream response: %v", recvErr.Error()))
-				waitch <- struct{}{}
+				closeStream <- struct{}{}
 				return
 			}
 		}
@@ -58,21 +59,21 @@ func (g *GRPCSender) StartDispatch(ctx context.Context, currentAddr, addr string
 		select {
 		case <-time.After(time.Second * 1):
 			msg := utils.GenerateString(5)
-			sendErr := stream.Send(&chatv1.Message{
+			err := stream.Send(&chatv1.Message{
 				Message:  msg,
 				Sender:   currentAddr,
 				Receiver: addr,
 			})
 
 			if err != nil {
-				if errors.Is(sendErr, io.EOF) || status.Code(sendErr) == codes.Canceled {
-					g.log.Error(fmt.Sprintf("failed to send: %v", sendErr))
+				if errors.Is(err, io.EOF) || status.Code(err) == codes.Canceled {
+					g.log.Error(fmt.Sprintf("failed to send: %v", err))
 					continue
 				}
 				continue
 			}
 			fmt.Println(fmt.Sprintf("sent message to %s: %s", addr, msg))
-		case <-waitch:
+		case <-closeStream:
 			stream.CloseSend()
 			g.log.Info(fmt.Sprintf("stream closed: %s", addr))
 			rmNodeCh <- addr

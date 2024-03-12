@@ -16,7 +16,7 @@ import (
 func main() {
 	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	cfg := config.MustLoad()
-	fmt.Println(*cfg)
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	disc := discovery.NewDiscovery(log, cfg.GRPCConfig.Port, cfg.BroadcastPort, cfg.BroadcastPrefix)
